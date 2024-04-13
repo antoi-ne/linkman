@@ -194,7 +194,7 @@ while 1:
 
     b = cm.recv()
     if b != None:
-        beats = str(b).split(",")
+        beats = str(b, encoding='utf8').split(",")
 
     if beat_pulse > last_pulse:
         w.set_color(color_to_sdl(beats[phase_pulse]))

@@ -195,7 +195,7 @@ while 1:
     pattern = ",".join(m.beats)
 
     if pattern != last_pattern:
-        cm.send(bytes(pattern))
+        cm.send(bytes(pattern, encoding='utf8'))
         last_pattern = pattern
 
     last_pulse = beat_pulse
