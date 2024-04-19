@@ -59,6 +59,8 @@ class ClientManager():
             data = self.socket.recv(1024)
         except BlockingIOError:
             return None
+        except OSError:
+            return None
         else:
             return data
 
