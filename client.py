@@ -1,6 +1,6 @@
 import sdl2.ext
 import sdl2
-import link
+from link import Link
 from network import Network
 
 
@@ -76,16 +76,25 @@ class Window:
         self.renderer.clear()
         self.renderer.present()
 
+    # check if the window received an exit event
+    def was_exited(self):
+        events = sdl2.ext.get_events()
+        for event in events:
+            if event.type == sdl2.SDL_QUIT:
+                return True
+        return False
 
-l = link.Link(120.0)
-l.enabled = True
 
 
+#
+# CLIENT MAIN
+#
+
+# create the link
+link = Link(120.0)
+link.enabled = True
 quantized = False
 last_pulse = 0
-
-w = Window("LINKMAN")
-
 beats = [
     "off",
     "off",
@@ -105,36 +114,42 @@ beats = [
     "off",
 ]
 
-cm = Network("172.20.10.2")
+# create the window
+window = Window("LINKMAN")
 
+# connect the network
+net = Network("172.20.10.2")
+
+# main script loop
 while 1:
 
-    s = l.captureSessionState()
+    # get the session state and clock
+    session_state = link.captureSessionState()
+    current_clock = link.clock()
 
-    lt = l.clock()
-
-    beat = s.beatAtTime(lt.micros(), 4)
-    phase = s.phaseAtTime(lt.micros(), 4)
-
+    # calcul the beat and phase
+    beat = session_state.beatAtTime(current_clock.micros(), 4)
+    phase = session_state.phaseAtTime(current_clock.micros(), 4)
     beat_pulse = int(beat * 4)
     phase_pulse = int(phase * 4)
 
-    events = sdl2.ext.get_events()
-    for event in events:
-        if event.type == sdl2.SDL_QUIT:
-            exit(0)
+    # check for window exited
+    if window.was_exited() == True:
+        exit(0)
 
+    # is this usefull ???
     if quantized == False:
         if phase_pulse % 4 == 0:
             quantized = True
         else:
             continue
 
-    b = cm.recv()
+    # receive message from the master
+    b = net.recv()
     if b != None:
         beats = str(b, encoding='utf8').split(",")
 
+    # draw the specified color
     if beat_pulse > last_pulse:
-        w.set_color(beats[phase_pulse])
-
+        window.set_color(beats[phase_pulse])
     last_pulse = beat_pulse
