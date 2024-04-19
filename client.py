@@ -121,47 +121,7 @@ class Network():
         return data
 
 
-black = sdl2.ext.Color(0, 0, 0)
-
-
-def color_to_sdl(color: str) -> sdl2.ext.Color:
-    match color:
-        case "red":
-            return sdl2.ext.Color(255, 0, 0)
-        case "orange":
-            return sdl2.ext.Color(255, 140, 0)
-        case "orange_light":
-            return sdl2.ext.Color(255, 140, 0)
-        case "yellow_warm":
-            return sdl2.ext.Color(253, 218, 13)
-        case "yellow":
-            return sdl2.ext.Color(255, 255, 0)
-        case "lime":
-            return sdl2.ext.Color(75, 100, 0)
-        case "green":
-            return sdl2.ext.Color(0, 255, 0)
-        case "mint":
-            return sdl2.ext.Color(62, 180, 137)
-        case "cyan":
-            return sdl2.ext.Color(0, 255, 255)
-        case "turquoise":
-            return sdl2.ext.Color(64, 224, 208)
-        case "blue":
-            return sdl2.ext.Color(0, 0, 255)
-        case "plum":
-            return sdl2.ext.Color(103, 49, 71)
-        case "violet":
-            return sdl2.ext.Color(255, 87, 51)
-        case "purple":
-            return sdl2.ext.Color(128, 0, 128)
-        case "magenta":
-            return sdl2.ext.Color(255, 0, 255)
-        case "white":
-            return sdl2.ext.Color(255, 255, 255)
-
-    return black
-
-
+# Window object
 class Window:
 
     # create a window
@@ -186,12 +146,49 @@ class Window:
         )
 
         # render the window
-        self.set_color(black)
+        self.set_color("black")
         self.window.show()
 
+    # convert the string to a sdl color
+    def _convert_color_str(self, color: str) -> sdl2.ext.Color:
+        match color:
+            case "red":
+                return sdl2.ext.Color(255, 0, 0)
+            case "orange":
+                return sdl2.ext.Color(255, 140, 0)
+            case "orange_light":
+                return sdl2.ext.Color(255, 140, 0)
+            case "yellow_warm":
+                return sdl2.ext.Color(253, 218, 13)
+            case "yellow":
+                return sdl2.ext.Color(255, 255, 0)
+            case "lime":
+                return sdl2.ext.Color(75, 100, 0)
+            case "green":
+                return sdl2.ext.Color(0, 255, 0)
+            case "mint":
+                return sdl2.ext.Color(62, 180, 137)
+            case "cyan":
+                return sdl2.ext.Color(0, 255, 255)
+            case "turquoise":
+                return sdl2.ext.Color(64, 224, 208)
+            case "blue":
+                return sdl2.ext.Color(0, 0, 255)
+            case "plum":
+                return sdl2.ext.Color(103, 49, 71)
+            case "violet":
+                return sdl2.ext.Color(255, 87, 51)
+            case "purple":
+                return sdl2.ext.Color(128, 0, 128)
+            case "magenta":
+                return sdl2.ext.Color(255, 0, 255)
+            case "white":
+                return sdl2.ext.Color(255, 255, 255)
+        return sdl2.ext.Color(0, 0, 0)
+    
     # change the window color
     def set_color(self, color):
-        print(color)
+        color = self._convert_color_str(color)
         self.renderer.color = color
         self.renderer.clear()
         self.renderer.present()
@@ -255,6 +252,6 @@ while 1:
         beats = str(b, encoding='utf8').split(",")
 
     if beat_pulse > last_pulse:
-        w.set_color(color_to_sdl(beats[phase_pulse]))
+        w.set_color(beats[phase_pulse])
 
     last_pulse = beat_pulse
