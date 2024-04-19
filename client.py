@@ -32,46 +32,38 @@ class Window:
         self.set_color("black")
         self.window.show()
 
+    # convert the string to a rgb color
+    def _convert_color_str_to_rgb(self, color: str):
+        colors = {
+            'red': [255, 0, 0],
+            'orange': [255, 140, 0],
+            'yellow_warm': [253, 218, 13],
+            'yellow': [255, 255, 0],
+            'lime': [75, 100, 0],
+            'green': [0, 255, 0],
+            'mint': [62, 180, 137],
+            'cyan': [0, 255, 255],
+            'turquoise': [64, 224, 208],
+            'blue': [0, 0, 255],
+            'plum': [103, 49, 71],
+            'violet': [255, 87, 51],
+            'purple': [128, 0, 128],
+            'magenta': [255, 0, 255],
+            'white': [255, 255, 255],
+            'black': [0, 0, 0]
+        }
+        if color in colors:
+            return colors[color]
+        return colors["black"]
+
     # convert the string to a sdl color
-    def _convert_color_str(self, color: str) -> sdl2.ext.Color:
-        match color:
-            case "red":
-                return sdl2.ext.Color(255, 0, 0)
-            case "orange":
-                return sdl2.ext.Color(255, 140, 0)
-            case "orange_light":
-                return sdl2.ext.Color(255, 140, 0)
-            case "yellow_warm":
-                return sdl2.ext.Color(253, 218, 13)
-            case "yellow":
-                return sdl2.ext.Color(255, 255, 0)
-            case "lime":
-                return sdl2.ext.Color(75, 100, 0)
-            case "green":
-                return sdl2.ext.Color(0, 255, 0)
-            case "mint":
-                return sdl2.ext.Color(62, 180, 137)
-            case "cyan":
-                return sdl2.ext.Color(0, 255, 255)
-            case "turquoise":
-                return sdl2.ext.Color(64, 224, 208)
-            case "blue":
-                return sdl2.ext.Color(0, 0, 255)
-            case "plum":
-                return sdl2.ext.Color(103, 49, 71)
-            case "violet":
-                return sdl2.ext.Color(255, 87, 51)
-            case "purple":
-                return sdl2.ext.Color(128, 0, 128)
-            case "magenta":
-                return sdl2.ext.Color(255, 0, 255)
-            case "white":
-                return sdl2.ext.Color(255, 255, 255)
-        return sdl2.ext.Color(0, 0, 0)
+    def _convert_color_str_to_sdl(self, color: str) -> sdl2.ext.Color:
+        rgb = self._convert_color_str_to_rgb(color)
+        return sdl2.ext.Color(rgb[0], rgb[1], rgb[2])
     
     # change the window color
     def set_color(self, color):
-        color = self._convert_color_str(color)
+        color = self._convert_color_str_to_sdl(color)
         self.renderer.color = color
         self.renderer.clear()
         self.renderer.present()
