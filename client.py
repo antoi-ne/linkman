@@ -6,12 +6,14 @@ import socket
 import selectors
 
 class ClientManager():
-    def __init__(self, addr=''):
-        
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setblocking(False)
 
-        if not addr:
+    def __init__(self, addr=None):
+        
+        self.socket = None
+        self._create_socket(addr)
+
+        if addr is None:
+            self.socket.setblocking(False)
             addr = ('0.0.0.0', 7777)
             print('listening on', addr)
             self.socket.bind(addr)
@@ -19,12 +21,28 @@ class ClientManager():
             self.selector = selectors.DefaultSelector()
             self.selector.register(self.socket, selectors.EVENT_READ)
         else:
+            while self._connect_wrapper(addr) == False:
+                pass
+            self.socket.setblocking(False)
+
+    def _create_socket(self, addr):
+        if self.socket is not None:
+            self.socket.close()
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if addr is not None:
+            self.socket.settimeout(1)
+
+    def _connect_wrapper(self, addr):
             print('connecting to', addr)
             try:
                 self.socket.connect((addr, 7777))
-            except BlockingIOError:
-                pass 
-
+            except TimeoutError:
+                return False
+            except OSError:
+                self._create_socket(addr)
+                return False
+            return True
+    
     def _accept_wrapper(self, sock):
         client_socket, client_address = sock.accept()
         print('connection from', client_address)
