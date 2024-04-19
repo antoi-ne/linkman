@@ -1,18 +1,24 @@
 import sdl2.ext
 import sdl2
 import link
-
 import socket
 import selectors
 
-class ClientManager():
 
+# Network object
+class Network():
+
+    # create the Network object
     def __init__(self, addr=None):
         
+        # create the socket
         self.socket = None
         self._create_socket(addr)
 
+        # check if this is the master
         if addr is None:
+
+            # start to listen for clients
             self.socket.setblocking(False)
             addr = ('0.0.0.0', 7777)
             print('listening on', addr)
@@ -20,67 +26,100 @@ class ClientManager():
             self.socket.listen(32)
             self.selector = selectors.DefaultSelector()
             self.selector.register(self.socket, selectors.EVENT_READ)
+
+        # check if this is the client
         else:
+
+            # connect to the master
             while self._connect_wrapper(addr) == False:
                 pass
             self.socket.setblocking(False)
 
-    def _create_socket(self, addr):
+    # create the socket
+    def _create_socket(self, is_client=False):
+
+        # close the socket if needed
         if self.socket is not None:
             self.socket.close()
+
+        # open the socket
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if addr is not None:
+
+        # set the connect timeout for clients
+        if is_client == True:
             self.socket.settimeout(1)
 
+    # connect to the master server
     def _connect_wrapper(self, addr):
-            print('connecting to', addr)
+
+            # connect to the master server
+            print('Connecting to', addr)
             try:
                 self.socket.connect((addr, 7777))
+
+            # check if we didn't got any response
             except TimeoutError:
                 return False
+            
+            # check for other errors
             except OSError:
                 self._create_socket(addr)
                 return False
+            
+            # we are connected !
             return True
     
-    def _accept_wrapper(self, sock):
+    # accept a client
+    def _connect_client(self, sock):
         client_socket, client_address = sock.accept()
-        print('connection from', client_address)
+        print('Connection from', client_address)
         client_socket.setblocking(False)
         self.selector.register(client_socket, selectors.EVENT_READ, data=client_address)
 
-    def _close_wrapper(self, client_socket):
+    # disconnect a client
+    def _disconnect_client(self, client_socket):
         self.selector.unregister(client_socket)
         client_socket.close()
     
-    def _handle_client(self, client_socket, message):
-        try:
-            client_socket.sendall(message)
-        except Exception as e:
-            print('error occurred:', e) 
+    # send a message to a client
+    def _send_client(self, client_socket, message):
+        client_socket.sendall(message)
     
-    def send(self, msg):
+    # senf a message to all clients
+    def send(self, message):
+
+        # check for all clients (dis)connection
         while len((events := self.selector.select(timeout=0))):
             for selector_key, _ in events:
                 if selector_key.fileobj == self.socket:
-                    self._accept_wrapper(selector_key.fileobj)
+                    self._connect_client(selector_key.fileobj)
                 else:
-                    self._close_wrapper(selector_key.fileobj)
+                    self._disconnect_client(selector_key.fileobj)
 
+        # send the message to all clients
         for _, selector_key in self.selector.get_map().items():
             if selector_key.data is not None:
                 client_socket = selector_key.fileobj
-                self._handle_client(client_socket, msg)
+                self._send_client(client_socket, message)
     
+    # receive a message
     def recv(self):
+
+        # try to receive a message
         try:
             data = self.socket.recv(1024)
+
+        # check if there is no message received
         except BlockingIOError:
             return None
+        
+        # check if there is a problem with the socket (not connected for example)
         except OSError:
             return None
-        else:
-            return data
+        
+        # return the received data
+        return data
+
 
 black = sdl2.ext.Color(0, 0, 0)
 
@@ -186,7 +225,7 @@ beats = [
     "off",
 ]
 
-cm = ClientManager("172.20.10.2")
+cm = Network("172.20.10.2")
 
 while 1:
 
