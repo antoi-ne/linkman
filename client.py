@@ -1,7 +1,6 @@
 import sdl2.ext
 import sdl2
 import link
-import pymikro.src.pymikro as pymikro
 import socket
 import selectors
 from network import Network
