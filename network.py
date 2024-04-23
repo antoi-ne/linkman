@@ -2,6 +2,7 @@ import socket
 import selectors
 import struct
 
+__author__ = 'Matthis "Suske" Perreaux'
 
 class _UDPManager:
 
@@ -13,7 +14,7 @@ class _UDPManager:
         if mode == "client":
             print("listening on", addr)
             self.socket.setblocking(False)
-            self.socket.bind(addr)
+            self.socket.bind(('', addr[1]))
             mreq = struct.pack("4sl", socket.inet_aton(self.addr[0]), socket.INADDR_ANY)
             self.socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
             # self.socket.listen(32)
@@ -140,8 +141,8 @@ class Network:
         if proto not in ("tcp", "udp"):
             raise ValueError("proto should be one of tcp or udp")
 
-        if proto == "udp" and mode == "master" and not addr:
-            raise ValueError("addr should be supplied in udp master mode")
+        if proto == "udp" and not addr:
+            raise ValueError("addr should be supplied in udp mode")
 
         if proto == "tcp" and mode == "client" and not addr:
             raise ValueError("addr should be supplied in tcp client mode")
