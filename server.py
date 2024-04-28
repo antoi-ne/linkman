@@ -43,9 +43,11 @@ class Maschine:
         self.m = pymikro.MaschineMikroMk3()
         self.m.setScreen("linkman", 28)
         self.m.setLight("button", "pad_mode", 1)
+        self.m.setLight("button", "keyboard", 1)
         self.selected_color = "white"
-        # self.shift_pressed = False
+        self.pressed_color = "black"
         self.mode = "pattern"
+        self.live = False
         self.beats = [
             [
                 "off",
@@ -242,9 +244,33 @@ class Maschine:
                 self.m.setLight("pad", i, 4, "white")
         self.m.updLights()
 
+    def build_msg(self):
+        msg = ""
+        if self.live:
+            msg += "l"
+        else:
+            msg += "p"
+        msg += ":"
+        msg += ",".join(m.beats[m.pattern])
+        msg += ":"
+        msg += self.pressed_color
+        return msg
+
     def read(self):
         cmd = self.m.readCmd()
         if cmd:
+            self.pressed_color = "black"
+
+            if cmd["cmd"] == "btn":
+                if "keyboard" in cmd["btn_pressed"]:
+                    if self.live == False:
+                        self.live = True
+                        self.m.setLight("button", "keyboard", 4)
+                    else:
+                        self.live = False
+                        self.m.setLight("button", "keyboard", 1)
+
+            # live mode
             # pattern change
             if cmd["cmd"] == "btn":
                 for pressed in cmd["btn_pressed"]:
@@ -257,14 +283,12 @@ class Maschine:
             if self.mode == "color":  # color mode specifics
                 if cmd["cmd"] == "pad":
                     self.selected_color = m_colors[cmd["pad_nb"]]
+                    if cmd["pad_val"] > 0 and cmd["touched"] == True:
+                        self.pressed_color = m_colors[cmd["pad_nb"]]
                 if cmd["cmd"] == "btn":
                     if "pad_mode" in cmd["btn_pressed"]:
                         self.mode = "pattern"
                         self.m.setLight("button", "pad_mode", 1)
-                    # if "shift" in cmd["btn_pressed"]:
-                    #     self.shift_pressed = True
-                    # else:
-                    #     self.shift_pressed = False
 
             elif self.mode == "pattern":  # pattern mode specific
                 if (
@@ -280,10 +304,6 @@ class Maschine:
                     if "pad_mode" in cmd["btn_pressed"]:
                         self.mode = "color"
                         self.m.setLight("button", "pad_mode", 4)
-                    # if "shift" in cmd["btn_pressed"]:
-                    #     self.shift_pressed = True
-                    # else:
-                    #     self.shift_pressed = False
 
 
 l = link.Link(120.0)
@@ -292,11 +312,12 @@ l.enabled = True
 
 quantized = False
 last_pulse = 0
-last_pattern = ""
+last_msg = ""
 
 m = Maschine()
 
 nw = Network("udp", "master", "224.19.29.39", 4242)
+
 
 def update_bpm(bpm):
     m.set_bpm(bpm)
@@ -304,6 +325,7 @@ def update_bpm(bpm):
 
 l.setTempoCallback(update_bpm)
 
+tick = 0
 
 while 1:
 
@@ -323,18 +345,26 @@ while 1:
     elif m.mode == "color":
         m.set_color_mode()
 
+
     if quantized == False:
         if phase_pulse % 4 == 0:
             quantized = True
         else:
             continue
 
-    pattern = ",".join(m.beats[m.pattern])
+    msg = m.build_msg()
 
-    if pattern != last_pattern:
-        nw.send(bytes(pattern, encoding="utf8"))
-        last_pattern = pattern
+    if msg != last_msg:
+        nw.send(bytes(msg, encoding="utf8"))
+        last_msg = msg
+
+    if tick == 1000:
+        nw.send(bytes(msg, encoding="utf8"))
+        tick = 0
+    else:
+        tick += 1
 
     last_pulse = beat_pulse
 
-    time.sleep(0.001)
+
+
