@@ -1,15 +1,19 @@
 import glfw
 from OpenGL.GL import *
 from time import sleep
-
+from dataclasses import dataclass
 from window import Window
 
-win = Window()
+@dataclass
+class Size:
+    width: int
+    height: int
+
+win = Window(size=Size(600, 400))
 
 i = True
 while not win.should_close():
-    win.set_color("magenta" if (i := not i) else "white")
-    sleep(0.5)
+    sleep(1)
 
 
 win.terminate()

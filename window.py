@@ -29,11 +29,12 @@ def convert_color(func):
 
 class Window:
 
-    def __init__(self, title="Linkman"):
+    def __init__(self, title="Linkman", size=None):
         if not glfw.init():
             print("Failed to initialize gflw")
             exit(1)
-        size = glfw.get_video_mode(glfw.get_primary_monitor()).size
+        if not size:
+            size = glfw.get_video_mode(glfw.get_primary_monitor()).size
         self.window = glfw.create_window(size.width, size.height, title, glfw.get_primary_monitor(), None)
 
         if not self.window:
