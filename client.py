@@ -1,7 +1,10 @@
 import sdl2.ext
 import sdl2
 from link import Link
+import socket
+import selectors
 from network import Network
+import time
 
 
 # Window object
@@ -22,7 +25,7 @@ class Window:
         self.window = sdl2.ext.Window(
             window_name,
             size=(display_mode.w, display_mode.h),
-            flags=sdl2.SDL_WINDOW_BORDERLESS,
+            flags=sdl2.SDL_WINDOW_FULLSCREEN_DESKTOP,
         )
         self.renderer = sdl2.ext.Renderer(
             self.window, flags=sdl2.SDL_RENDERER_ACCELERATED
@@ -35,22 +38,22 @@ class Window:
     # convert the string to a rgb color
     def _convert_color_str_to_rgb(self, color: str):
         colors = {
-            'red': [255, 0, 0],
-            'orange': [255, 140, 0],
-            'yellow_warm': [253, 218, 13],
-            'yellow': [255, 255, 0],
-            'lime': [75, 100, 0],
-            'green': [0, 255, 0],
-            'mint': [62, 180, 137],
-            'cyan': [0, 255, 255],
-            'turquoise': [64, 224, 208],
-            'blue': [0, 0, 255],
-            'plum': [103, 49, 71],
-            'violet': [255, 87, 51],
-            'purple': [128, 0, 128],
-            'magenta': [255, 0, 255],
-            'white': [255, 255, 255],
-            'black': [0, 0, 0]
+            "red": [255, 0, 0],
+            "orange": [255, 140, 0],
+            "yellow_warm": [253, 218, 13],
+            "yellow": [255, 255, 0],
+            "lime": [75, 100, 0],
+            "green": [0, 255, 0],
+            "mint": [62, 180, 137],
+            "cyan": [0, 255, 255],
+            "turquoise": [64, 224, 208],
+            "blue": [0, 0, 255],
+            "plum": [103, 49, 71],
+            "violet": [255, 87, 51],
+            "purple": [128, 0, 128],
+            "magenta": [255, 0, 255],
+            "white": [255, 255, 255],
+            "black": [0, 0, 0],
         }
         if color in colors:
             return colors[color]
@@ -60,7 +63,7 @@ class Window:
     def _convert_color_str_to_sdl(self, color: str) -> sdl2.ext.Color:
         rgb = self._convert_color_str_to_rgb(color)
         return sdl2.ext.Color(rgb[0], rgb[1], rgb[2])
-    
+
     # change the window color
     def set_color(self, color):
         color = self._convert_color_str_to_sdl(color)
@@ -75,8 +78,6 @@ class Window:
             if event.type == sdl2.SDL_QUIT:
                 return True
         return False
-
-
 
 #
 # CLIENT MAIN
@@ -106,11 +107,11 @@ beats = [
     "off",
 ]
 
-# create the window
 window = Window("LINKMAN")
+net = Network("udp", "client", "239.1.1.1", 4242)
 
-# connect the network
-net = Network("172.20.10.2")
+live = False
+pressed = "black"
 
 # main script loop
 while 1:
@@ -139,9 +140,22 @@ while 1:
     # receive message from the master
     b = net.recv()
     if b != None:
-        beats = str(b, encoding='utf8').split(",")
+        msg = str(b, encoding="utf8")
+        split_msg = msg.split(":")
+        if split_msg[0] == "l":
+            live = True
+        elif split_msg[0] == "p":
+            live = False
+        beats = split_msg[1].split(",")
+        pressed = split_msg[2]
+
+    if live:
+        window.set_color(pressed)
+    elif beat_pulse > last_pulse:
+        window.set_color(beats[phase_pulse])
 
     # draw the specified color
     if beat_pulse > last_pulse:
         window.set_color(beats[phase_pulse])
     last_pulse = beat_pulse
+
