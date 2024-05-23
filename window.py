@@ -45,6 +45,7 @@ class Window:
         glfw.make_context_current(self.window)
         glfw.set_key_callback(self.window, self._exit_callback)
         glfw.swap_buffers(self.window)
+        glfw.set_input_mode(self.window, glfw.CURSOR, glfw.CURSOR_HIDDEN)
 
         self.color = (0, 0, 0)
 
