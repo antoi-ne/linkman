@@ -52,19 +52,21 @@ class Window:
             glfw.set_window_should_close(self.window, True)
 
 
-    @convert_color
-    def set_color(self, color):
-        self.color = color
-
     def render(self):
         glClearColor(*self.color, 1.0)
         glClear(GL_COLOR_BUFFER_BIT)
         glfw.swap_buffers(self.window)
 
+    @convert_color
+    def set_color(self, color):
+        self.color = color
+        self.render()
+
     def poll_events(self):
         glfw.poll_events()
 
     def should_close(self):
+        self.poll_events()
         return glfw.window_should_close(self.window)
 
     def terminate(self):

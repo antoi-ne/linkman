@@ -9,8 +9,6 @@ win = Window()
 i = True
 while not win.should_close():
     win.set_color("magenta" if (i := not i) else "white")
-    win.render()
-    win.poll_events()
     sleep(0.5)
 
 
