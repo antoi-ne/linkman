@@ -1,6 +1,6 @@
 import glfw
 import sys
-import caffeinate
+import subprocess
 from OpenGL.GL import *
 
 colors = {
