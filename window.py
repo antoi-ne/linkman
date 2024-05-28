@@ -24,6 +24,7 @@ def convert_color(func):
     def wrapper(self, color):
         if type(color) == str:
             color = colors.get(color, colors['black'])
+        color = [i / 255 for i in color]
         func(self, color)
     return wrapper
 
