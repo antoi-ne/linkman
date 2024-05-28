@@ -51,7 +51,7 @@ class Window:
         glfw.set_input_mode(self.window, glfw.CURSOR, glfw.CURSOR_HIDDEN)
 
         if 'darwin' in sys.platform:
-            subprocess.Popen('caffeinate')
+            subprocess.Popen('caffeinate -d -i -m -s -u')
 
         self.color = (0, 0, 0)
 
